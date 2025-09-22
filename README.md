@@ -3,6 +3,7 @@ Projeto em C++ para implementar um algoritmo de **caça-palavras** usando **thre
 O programa lê uma matriz de caracteres a partir de um arquivo de texto e permite realizar buscas por palavras presentes no mesmo arquivo, armazenando e exibindo suas localizações.
 
 ## Estrutura do Projeto
+```text
 ├── src/                # Código-fonte
 │   ├── main.cpp        # Ponto de entrada
 │   └── busca.h         # Funções de busca
@@ -11,6 +12,7 @@ O programa lê uma matriz de caracteres a partir de um arquivo de texto e permit
 ├── resultados.txt      # Arquivo de saída
 │
 ├── README.md           # Documentação do projeto
+```
 
 ## Formato do Arquivo de Entrada
 
