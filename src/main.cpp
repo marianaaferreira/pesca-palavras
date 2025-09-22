@@ -94,12 +94,8 @@ int main() {
                 }
         }
     }
-    
-    /*char testechar = 'a';
-    cout << testechar;
-    testechar = toUpperChar(testechar); cout<< testechar;*/
 
-    ofstream fout("resultados.html");
+    ofstream fout("resultados.txt");
     if (!fout) {
         cerr << "Erro ao criar o arquivo de saída!" << endl;
         return 1;

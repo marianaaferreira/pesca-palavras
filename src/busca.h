@@ -12,7 +12,7 @@ struct Coordenada {
 struct Coordenadas {
     Coordenada inicial;
     Coordenada final;
-    string direcao; //1- Diagonal 2- Horizontal 3- Vertical 4- DiagonalReverso 5- HorizontalReverso 6- VerticalReverso
+    string direcao; 
 };
 
 void procuraDiagonal(vector<vector<char>> m, string palavra, bool &encontrou, Coordenadas &c);
