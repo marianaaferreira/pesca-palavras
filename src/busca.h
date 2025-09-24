@@ -23,9 +23,8 @@ struct Coordenadas {
 std::mutex mtx; 
 
 // Função auxiliar para comparar caracteres sem considerar maiusculas e minusculas
-inline bool iguais(char a, char b) {
-    return std::toupper(static_cast<unsigned char>(a)) ==
-           std::toupper(static_cast<unsigned char>(b));
+bool iguais(char a, char b) {
+    return toupper(a) == toupper(b);
 }
 
 void direita(const vector<vector<char>>& matriz, const string& palavra,
