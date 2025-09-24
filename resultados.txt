@@ -1011,3 +1011,4 @@ pronto - (226, 42): baixo
 bloqueado - (755, 13): baixo
 executando - (940, 66): baixo
 ocioso - (9, 72): baixo
+teste: não encontrada

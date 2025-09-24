@@ -2,6 +2,11 @@
 #define BUSCA_H
 
 #include <vector>
+#include <string>
+#include <thread>
+#include <mutex>
+#include <cctype>
+
 using namespace std;
 
 struct Coordenada {
@@ -15,193 +20,232 @@ struct Coordenadas {
     string direcao; 
 };
 
-void procuraDiagonal(vector<vector<char>> m, string palavra, bool &encontrou, Coordenadas &c);
-void procuraHorizontal(vector<vector<char>> m, string palavra, bool &encontrou, Coordenadas &c);
-void procuraVertical(vector<vector<char>> m, string palavra, bool &encontrou, Coordenadas &c);
-void procuraDiagonalReverso(vector<vector<char>> m, string palavra, bool &encontrou, Coordenadas &c);
-void procuraHorizontalReverso(vector<vector<char>> m, string palavra, bool &encontrou, Coordenadas &c);
-void procuraVerticalReverso(vector<vector<char>> m, string palavra, bool &encontrou, Coordenadas &c);
+std::mutex mtx; 
 
-// 1- Diagonal (para baixo e para a direita)
-void procuraDiagonal(vector<vector<char>> m, string palavra, bool &encontrou, Coordenadas &c) {
-    if (encontrou) return;
+// Função auxiliar para comparar caracteres sem considerar maiusculas e minusculas
+inline bool iguais(char a, char b) {
+    return std::toupper(static_cast<unsigned char>(a)) ==
+           std::toupper(static_cast<unsigned char>(b));
+}
 
-    int linhas = m.size();
-    if (linhas == 0) return;
-    int colunas = m[0].size();
-    int tamanhoPalavra = palavra.size();
+void direita(const vector<vector<char>>& matriz, const string& palavra,
+             Coordenadas& c, bool& encontrou) {
+    int linhas = matriz.size();
+    int colunas = matriz[0].size();
 
-    for (int i = 0; i <= linhas - tamanhoPalavra; ++i) {
-        for (int j = 0; j <= colunas - tamanhoPalavra; ++j) {
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j <= colunas - (int)palavra.size(); j++) {
             bool match = true;
-            for (int k = 0; k < tamanhoPalavra; ++k) {
-                if (m[i + k][j + k] != palavra[k]) {
+            for (int k = 0; k < (int)palavra.size(); k++) {
+                if (!iguais(matriz[i][j + k], palavra[k])) {
                     match = false;
                     break;
                 }
             }
             if (match) {
-                encontrou = true;
-                c.inicial = {i, j};
-                c.final = {i + tamanhoPalavra - 1, j + tamanhoPalavra - 1};
-                c.direcao = "direita/baixo";
+                lock_guard<mutex> lock(mtx);
+                if (!encontrou) {
+                    encontrou = true;
+                    c.inicial = {i, j};
+                    c.final = {i, j + (int)palavra.size() - 1};
+                    c.direcao = "direita";
+                }
                 return;
             }
         }
     }
 }
 
-// 2- Horizontal (para a direita)
-void procuraHorizontal(vector<vector<char>> m, string palavra, bool &encontrou, Coordenadas &c) {
-    if (encontrou) return;
+void esquerda(const vector<vector<char>>& matriz, const string& palavra,
+              Coordenadas& c, bool& encontrou) {
+    int linhas = matriz.size();
+    int colunas = matriz[0].size();
 
-    int linhas = m.size();
-    if (linhas == 0) return;
-    int colunas = m[0].size();
-    int tamanhoPalavra = palavra.size();
-
-    for (int i = 0; i < linhas; ++i) {
-        for (int j = 0; j <= colunas - tamanhoPalavra; ++j) {
+    for (int i = 0; i < linhas; i++) {
+        for (int j = colunas - 1; j >= (int)palavra.size() - 1; j--) {
             bool match = true;
-            for (int k = 0; k < tamanhoPalavra; ++k) {
-                if (m[i][j + k] != palavra[k]) {
+            for (int k = 0; k < (int)palavra.size(); k++) {
+                if (!iguais(matriz[i][j - k], palavra[k])) {
                     match = false;
                     break;
                 }
             }
             if (match) {
-                encontrou = true;
-                c.inicial = {i, j};
-                c.final = {i, j + tamanhoPalavra - 1};
-                c.direcao = "direita";
+                lock_guard<mutex> lock(mtx);
+                if (!encontrou) {
+                    encontrou = true;
+                    c.inicial = {i, j};
+                    c.final = {i, j - (int)palavra.size() + 1};
+                    c.direcao = "esquerda";
+                }
                 return;
             }
         }
     }
 }
 
-// 3- Vertical (para baixo)
-void procuraVertical(vector<vector<char>> m, string palavra, bool &encontrou, Coordenadas &c) {
-    if (encontrou) {
-        return; // sai da função se a palavra já foi encontrada por outra thread
-    }
+void baixo(const vector<vector<char>>& matriz, const string& palavra,
+           Coordenadas& c, bool& encontrou) {
+    int linhas = matriz.size();
+    int colunas = matriz[0].size();
 
-    int linhas = m.size();
-    if (linhas == 0) {
-        return;
-    }
-    int colunas = m[0].size();
-    int tamanhoPalavra = palavra.size();
-
-    for (int j = 0; j < colunas; ++j) {
-        for (int i = 0; i <= linhas - tamanhoPalavra; ++i) {
+    for (int i = 0; i <= linhas - (int)palavra.size(); i++) {
+        for (int j = 0; j < colunas; j++) {
             bool match = true;
-            // Verifica a palavra de cima para baixo
-            for (int k = 0; k < tamanhoPalavra; ++k) {
-                if (m[i + k][j] != palavra[k]) {
-                    match = false;
-                    break;
-                }
-            }
-
-            // Se a palavra foi encontrada atualiza as variáveis da struct e o retorno booleano
-            if (match) {
-                encontrou = true;
-
-                c.inicial.linha = i;
-                c.inicial.coluna = j;
-
-                c.final.linha = i + tamanhoPalavra - 1;
-                c.final.coluna = j;
-
-                c.direcao = "baixo";
-                return; 
-            }
-        }
-    }
-}
-
-// 4- DiagonalReverso (para baixo e para a esquerda)
-void procuraDiagonalReverso(vector<vector<char>> m, string palavra, bool &encontrou, Coordenadas &c) {
-    if (encontrou) return;
-
-    int linhas = m.size();
-    if (linhas == 0) return;
-    int colunas = m[0].size();
-    int tamanhoPalavra = palavra.size();
-
-    for (int i = 0; i <= linhas - tamanhoPalavra; ++i) {
-        for (int j = tamanhoPalavra - 1; j < colunas; ++j) {
-            bool match = true;
-            for (int k = 0; k < tamanhoPalavra; ++k) {
-                if (m[i + k][j - k] != palavra[k]) {
+            for (int k = 0; k < (int)palavra.size(); k++) {
+                if (!iguais(matriz[i + k][j], palavra[k])) {
                     match = false;
                     break;
                 }
             }
             if (match) {
-                encontrou = true;
-                c.inicial = {i, j};
-                c.final = {i + tamanhoPalavra - 1, j - tamanhoPalavra + 1};
-                c.direcao = "baixo/esquerda";
+                lock_guard<mutex> lock(mtx);
+                if (!encontrou) {
+                    encontrou = true;
+                    c.inicial = {i, j};
+                    c.final = {i + (int)palavra.size() - 1, j};
+                    c.direcao = "baixo";
+                }
                 return;
             }
         }
     }
 }
 
-// 5- HorizontalReverso (para a esquerda)
-void procuraHorizontalReverso(vector<vector<char>> m, string palavra, bool &encontrou, Coordenadas &c) {
-    if (encontrou) return;
+void cima(const vector<vector<char>>& matriz, const string& palavra,
+          Coordenadas& c, bool& encontrou) {
+    int linhas = matriz.size();
+    int colunas = matriz[0].size();
 
-    int linhas = m.size();
-    if (linhas == 0) return;
-    int colunas = m[0].size();
-    int tamanhoPalavra = palavra.size();
-
-    for (int i = 0; i < linhas; ++i) {
-        for (int j = tamanhoPalavra - 1; j < colunas; ++j) {
+    for (int i = linhas - 1; i >= (int)palavra.size() - 1; i--) {
+        for (int j = 0; j < colunas; j++) {
             bool match = true;
-            for (int k = 0; k < tamanhoPalavra; ++k) {
-                if (m[i][j - k] != palavra[k]) {
+            for (int k = 0; k < (int)palavra.size(); k++) {
+                if (!iguais(matriz[i - k][j], palavra[k])) {
                     match = false;
                     break;
                 }
             }
             if (match) {
-                encontrou = true;
-                c.inicial = {i, j};
-                c.final = {i, j - tamanhoPalavra + 1};
-                c.direcao = "esquerda";
+                lock_guard<mutex> lock(mtx);
+                if (!encontrou) {
+                    encontrou = true;
+                    c.inicial = {i, j};
+                    c.final = {i - (int)palavra.size() + 1, j};
+                    c.direcao = "cima";
+                }
                 return;
             }
         }
     }
 }
 
-// 6- VerticalReverso (para cima)
-void procuraVerticalReverso(vector<vector<char>> m, string palavra, bool &encontrou, Coordenadas &c) {
-    if (encontrou) return;
+void diagonalDireitaBaixo(const vector<vector<char>>& matriz, const string& palavra,
+                          Coordenadas& c, bool& encontrou) {
+    int linhas = matriz.size();
+    int colunas = matriz[0].size();
 
-    int linhas = m.size();
-    if (linhas == 0) return;
-    int colunas = m[0].size();
-    int tamanhoPalavra = palavra.size();
-
-    for (int j = 0; j < colunas; ++j) {
-        for (int i = tamanhoPalavra - 1; i < linhas; ++i) {
+    for (int i = 0; i <= linhas - (int)palavra.size(); i++) {
+        for (int j = 0; j <= colunas - (int)palavra.size(); j++) {
             bool match = true;
-            for (int k = 0; k < tamanhoPalavra; ++k) {
-                if (m[i - k][j] != palavra[k]) {
+            for (int k = 0; k < (int)palavra.size(); k++) {
+                if (!iguais(matriz[i + k][j + k], palavra[k])) {
                     match = false;
                     break;
                 }
             }
             if (match) {
-                encontrou = true;
-                c.inicial = {i, j};
-                c.final = {i - tamanhoPalavra + 1, j};
-                c.direcao = "cima";
+                lock_guard<mutex> lock(mtx);
+                if (!encontrou) {
+                    encontrou = true;
+                    c.inicial = {i, j};
+                    c.final = {i + (int)palavra.size() - 1, j + (int)palavra.size() - 1};
+                    c.direcao = "diagonal direita/baixo";
+                }
+                return;
+            }
+        }
+    }
+}
+
+void diagonalEsquerdaBaixo(const vector<vector<char>>& matriz, const string& palavra,
+                           Coordenadas& c, bool& encontrou) {
+    int linhas = matriz.size();
+    int colunas = matriz[0].size();
+
+    for (int i = 0; i <= linhas - (int)palavra.size(); i++) {
+        for (int j = (int)palavra.size() - 1; j < colunas; j++) {
+            bool match = true;
+            for (int k = 0; k < (int)palavra.size(); k++) {
+                if (!iguais(matriz[i + k][j - k], palavra[k])) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                lock_guard<mutex> lock(mtx);
+                if (!encontrou) {
+                    encontrou = true;
+                    c.inicial = {i, j};
+                    c.final = {i + (int)palavra.size() - 1, j - (int)palavra.size() + 1};
+                    c.direcao = "diagonal esquerda/baixo";
+                }
+                return;
+            }
+        }
+    }
+}
+
+void diagonalDireitaCima(const vector<vector<char>>& matriz, const string& palavra,
+                         Coordenadas& c, bool& encontrou) {
+    int linhas = matriz.size();
+    int colunas = matriz[0].size();
+
+    for (int i = (int)palavra.size() - 1; i < linhas; i++) {
+        for (int j = 0; j <= colunas - (int)palavra.size(); j++) {
+            bool match = true;
+            for (int k = 0; k < (int)palavra.size(); k++) {
+                if (!iguais(matriz[i - k][j + k], palavra[k])) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                lock_guard<mutex> lock(mtx);
+                if (!encontrou) {
+                    encontrou = true;
+                    c.inicial = {i, j};
+                    c.final = {i - (int)palavra.size() + 1, j + (int)palavra.size() - 1};
+                    c.direcao = "diagonal direita/cima";
+                }
+                return;
+            }
+        }
+    }
+}
+
+void diagonalEsquerdaCima(const vector<vector<char>>& matriz, const string& palavra,
+                          Coordenadas& c, bool& encontrou) {
+    int linhas = matriz.size();
+    int colunas = matriz[0].size();
+
+    for (int i = (int)palavra.size() - 1; i < linhas; i++) {
+        for (int j = (int)palavra.size() - 1; j < colunas; j++) {
+            bool match = true;
+            for (int k = 0; k < (int)palavra.size(); k++) {
+                if (!iguais(matriz[i - k][j - k], palavra[k])) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                lock_guard<mutex> lock(mtx);
+                if (!encontrou) {
+                    encontrou = true;
+                    c.inicial = {i, j};
+                    c.final = {i - (int)palavra.size() + 1, j - (int)palavra.size() + 1};
+                    c.direcao = "diagonal esquerda/cima";
+                }
                 return;
             }
         }
