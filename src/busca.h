@@ -9,6 +9,18 @@
 
 using namespace std;
 
+enum Direcao {
+    DIREITA,
+    ESQUERDA,
+    CIMA,
+    BAIXO,
+    DIAGONAL_DIREITA_BAIXO,
+    DIAGONAL_ESQUERDA_BAIXO,
+    DIAGONAL_DIREITA_CIMA,
+    DIAGONAL_ESQUERDA_CIMA,
+    NENHUMA
+};
+
 struct Coordenada {
     int linha;
     int coluna;
@@ -17,14 +29,29 @@ struct Coordenada {
 struct Coordenadas {
     Coordenada inicial;
     Coordenada final;
-    string direcao; 
+    Direcao direcao;
 };
 
-std::mutex mtx; 
+std::mutex mtx;
 
-// Função auxiliar para comparar caracteres sem considerar maiusculas e minusculas
-bool iguais(char a, char b) {
+// compara caracteres sem considerar maiúsculas e minúsculas
+inline bool iguais(char a, char b) {
     return toupper(a) == toupper(b);
+}
+
+// enum para string
+inline string direcaoToString(Direcao d) {
+    switch (d) {
+        case DIREITA: return "direita";
+        case ESQUERDA: return "esquerda";
+        case CIMA: return "cima";
+        case BAIXO: return "baixo";
+        case DIAGONAL_DIREITA_BAIXO: return "diagonal direita/baixo";
+        case DIAGONAL_ESQUERDA_BAIXO: return "diagonal esquerda/baixo";
+        case DIAGONAL_DIREITA_CIMA: return "diagonal direita/cima";
+        case DIAGONAL_ESQUERDA_CIMA: return "diagonal esquerda/cima";
+        default: return "nenhuma";
+    }
 }
 
 void direita(const vector<vector<char>>& matriz, const string& palavra,
@@ -47,7 +74,7 @@ void direita(const vector<vector<char>>& matriz, const string& palavra,
                     encontrou = true;
                     c.inicial = {i, j};
                     c.final = {i, j + (int)palavra.size() - 1};
-                    c.direcao = "direita";
+                    c.direcao = DIREITA;
                 }
                 return;
             }
@@ -75,7 +102,7 @@ void esquerda(const vector<vector<char>>& matriz, const string& palavra,
                     encontrou = true;
                     c.inicial = {i, j};
                     c.final = {i, j - (int)palavra.size() + 1};
-                    c.direcao = "esquerda";
+                    c.direcao = ESQUERDA;
                 }
                 return;
             }
@@ -103,7 +130,7 @@ void baixo(const vector<vector<char>>& matriz, const string& palavra,
                     encontrou = true;
                     c.inicial = {i, j};
                     c.final = {i + (int)palavra.size() - 1, j};
-                    c.direcao = "baixo";
+                    c.direcao = BAIXO;
                 }
                 return;
             }
@@ -131,7 +158,7 @@ void cima(const vector<vector<char>>& matriz, const string& palavra,
                     encontrou = true;
                     c.inicial = {i, j};
                     c.final = {i - (int)palavra.size() + 1, j};
-                    c.direcao = "cima";
+                    c.direcao = CIMA;
                 }
                 return;
             }
@@ -159,7 +186,7 @@ void diagonalDireitaBaixo(const vector<vector<char>>& matriz, const string& pala
                     encontrou = true;
                     c.inicial = {i, j};
                     c.final = {i + (int)palavra.size() - 1, j + (int)palavra.size() - 1};
-                    c.direcao = "diagonal direita/baixo";
+                    c.direcao = DIAGONAL_DIREITA_BAIXO;
                 }
                 return;
             }
@@ -187,7 +214,7 @@ void diagonalEsquerdaBaixo(const vector<vector<char>>& matriz, const string& pal
                     encontrou = true;
                     c.inicial = {i, j};
                     c.final = {i + (int)palavra.size() - 1, j - (int)palavra.size() + 1};
-                    c.direcao = "diagonal esquerda/baixo";
+                    c.direcao = DIAGONAL_ESQUERDA_BAIXO;
                 }
                 return;
             }
@@ -215,7 +242,7 @@ void diagonalDireitaCima(const vector<vector<char>>& matriz, const string& palav
                     encontrou = true;
                     c.inicial = {i, j};
                     c.final = {i - (int)palavra.size() + 1, j + (int)palavra.size() - 1};
-                    c.direcao = "diagonal direita/cima";
+                    c.direcao = DIAGONAL_DIREITA_CIMA;
                 }
                 return;
             }
@@ -243,7 +270,7 @@ void diagonalEsquerdaCima(const vector<vector<char>>& matriz, const string& pala
                     encontrou = true;
                     c.inicial = {i, j};
                     c.final = {i - (int)palavra.size() + 1, j - (int)palavra.size() + 1};
-                    c.direcao = "diagonal esquerda/cima";
+                    c.direcao = DIAGONAL_ESQUERDA_CIMA;
                 }
                 return;
             }

@@ -41,11 +41,12 @@ int main() {
         cerr << "Erro ao abrir o arquivo!" << endl;
         return 1;
     }
+
     int linhas, colunas;
-    fin >> linhas >> colunas; //leitura da dimensao da matriz presente na primeira linha do arquivo
+    fin >> linhas >> colunas; // leitura da dimensão da matriz
     vector<vector<char>> matriz(linhas, vector<char>(colunas));
 
-    //leitura do arquivo e inserção dos caracteres em uma matriz
+    // leitura da matriz
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
             fin >> matriz[i][j];
@@ -57,7 +58,6 @@ int main() {
     while (fin >> palavra) {
         palavras.push_back(palavra);
     }
-
     fin.close();
 
     vector<ResultadoBusca> resultadosEncontrados;
@@ -70,31 +70,26 @@ int main() {
         if (encontrada) {
             Coordenada inicial = coordenadas.inicial;
             Coordenada final = coordenadas.final;
-            string direcao = coordenadas.direcao;
+            Direcao direcao = coordenadas.direcao;
 
             int linhaAtual = inicial.linha;
             int colunaAtual = inicial.coluna;
+
             while (true) {
                 matriz[linhaAtual][colunaAtual] = toupper(matriz[linhaAtual][colunaAtual]);
 
                 if (linhaAtual == final.linha && colunaAtual == final.coluna) break;
 
-                if (direcao == "direita/baixo") {
-                    linhaAtual++; colunaAtual++;
-                } else if (direcao == "direita") {
-                    colunaAtual++;
-                } else if (direcao == "baixo") {
-                    linhaAtual++;
-                } else if (direcao == "baixo/esquerda") {
-                    linhaAtual++; colunaAtual--;
-                } else if (direcao == "esquerda") {
-                    colunaAtual--;
-                } else if (direcao == "cima") {
-                    linhaAtual--;
-                } else if (direcao == "cima/direita") {
-                    linhaAtual--; colunaAtual++;
-                } else if (direcao == "cima/esquerda") {
-                    linhaAtual--; colunaAtual--;
+                switch (direcao) {
+                    case DIREITA: colunaAtual++; break;
+                    case ESQUERDA: colunaAtual--; break;
+                    case BAIXO: linhaAtual++; break;
+                    case CIMA: linhaAtual--; break;
+                    case DIAGONAL_DIREITA_BAIXO: linhaAtual++; colunaAtual++; break;
+                    case DIAGONAL_ESQUERDA_BAIXO: linhaAtual++; colunaAtual--; break;
+                    case DIAGONAL_DIREITA_CIMA: linhaAtual--; colunaAtual++; break;
+                    case DIAGONAL_ESQUERDA_CIMA: linhaAtual--; colunaAtual--; break;
+                    default: break;
                 }
             }
         }
@@ -106,6 +101,7 @@ int main() {
         return 1;
     }
 
+    // escreve matriz atualizada
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
             fout << matriz[i][j];
@@ -114,18 +110,18 @@ int main() {
     }
     fout << "------------------------------------------------------" << endl;
 
+    // escreve resultados
     for (const auto& resultado : resultadosEncontrados) {
         if (resultado.encontrada) {
             fout << resultado.palavra << " - ("
                  << resultado.coordenadas.inicial.linha + 1 << ", "
                  << resultado.coordenadas.inicial.coluna + 1 << "): "
-                 << resultado.coordenadas.direcao << endl;
+                 << direcaoToString(resultado.coordenadas.direcao) << endl;
         } else {
             fout << resultado.palavra << ": não encontrada" << endl;
         }
     }
 
     fout.close();
-
     return 0;
 }
